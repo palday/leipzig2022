@@ -1,0 +1,49 @@
+---
+title: "Mixed-effects models: All the questions you were too afraid to ask"
+author: "Phillip M. Alday"
+---
+
+Mixed-effects models have largely superseded classical repeated-measures ANOVA and paired t-tests in psychology and cognitive science and are quickly gaining ground in (cognitive) neuroscience.
+The underlying paradigm shift however has left many researchers with a number of questions, both general and domain specific.
+In this talk, I will cover a few core ideas underlying the application of mixed models and point toward other resources for more detailed follow-ups.
+
+Here are some of the questions that I've collected a few from my own teaching and from collaborators and their groups.
+Note that many of these questions are near duplicates, but I figure it's good to highlight the variations on a single underlying theme.
+
+## General
+- What do all these convergence warnings mean? Should I worry about them?
+- Singularities: Criteria when it is safe to ignore?
+- Why should I even care about mixed models? Isn't ANOVA good enough?
+- Can you please contrast the outcome of a simple ANOVA with the outcome of a linear mixed model for one and the same data set?
+- When do we use the forward selection (i.e., drop-one-term) and when the backward selection (i.e., add-one-term strategy) during model fitting?
+- Best strategy for model selection? This seems to be almost a question of ideology, top-down, bottom-up, theory derived only...
+- Best way to estimate power?
+- How to compute Bayes Factors with lmer models (so far we use https://rpubs.com/lindeloev/bayes_factors; is this approach correct/optimal?)
+
+## Assumptions and violations thereof
+- Partly from reviewer perspective: Violations of distribution assumptions, how vulnerable are LMMs in practice?
+- Multicollinearity: How bad can it be?
+- How to analyze RTs with (G)LMMs (skewed distributions)?
+- How to model heteroskedasticity in (G)LMM?
+- Is there a suitable link function?
+
+## Contrast coding and standardizing
+- To standardize or not to standardize?
+- What are the benefits and costs of ortshogonality of contrasts (and their implications for the random-effects structure)?
+- How do we determine the correct order of polynomial trends (and why do we need to find out to being with)?
+- Different codings (dummy vs. effects vs. ...): What to use when and what can go wrong?
+
+## Random effects
+- What are random effects actually?
+- How do I choose the correct random effects structure for my model + data?
+- What are the the consequences of misspecifying the random effects
+structure?
+- How to properly use RE PCA (for example how to identify the effects)?
+- What does `zerocorr` in MixedModels.jl / `||` in lme4 do? What does it mean for interpreting my data?
+- Should we first remove variance components for interaction terms or correlation parameters when selecting a model?
+
+## EEG / ERP
+- How do I handle EEG electrodes in mixed models? Are they fixed or
+random effects?
+- Can we model single-trial ERP data? Is there anything special to consider here?
+- We would like to model single-trial PCA sores projected from group PCA loadings for ERP data. Would you consider this a valid approach?

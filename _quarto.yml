@@ -1,0 +1,12 @@
+project:
+  execute-dir: project
+execute:
+  freeze: auto
+  cache: true
+website:
+  title: "Mixed-effects models: All the questions you were too afraid to ask  "
+format:
+  html:
+    theme: sandstone
+
+jupyter: julia-1.8
