@@ -65,7 +65,6 @@ summary(m)
 ```
 
 ```{R}
-
 #| echo: false
 theta <- getME(m,"theta")
 print(theta)
@@ -96,7 +95,6 @@ print(VarCorr(m2))
 
 Partial image for intercept with constant (optimal) slope and correlation.
 ```{R}
-
 #| echo: false
 theta2 <- getME(m2,"theta")
 ff2 <- function(x) as.function(m2)(c(x,theta2[2],theta2[3]))
@@ -124,7 +122,6 @@ summary(m3)
 ```
 
 ```{R}
-
 #| echo: false
 theta3 <- getME(m3,"theta")
 par(lwd=2, cex=2)
@@ -165,7 +162,6 @@ Option names are all for `nloptwrap`, the current default `lmer()` optimizer. `g
 
 
 ```{R}
-
 #| echo: false
 par(lwd=2, cex=2)
 par(mar=c(4,4,1,2))
@@ -207,7 +203,6 @@ text(tvec2[arg_min],1750,label=sprintf("Estimated slope: %f", b))
 Successfully completed optimization may not be the global optimum, but only a local one.
 
 ```{R}
-
 #| echo: false
 
 # from https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/384539#384539
@@ -228,7 +223,6 @@ DF$Number=as.factor(c(rep(1,10),rep(2,10))) #difference
 ```
 
 ```{R}
-
 #| echo: false
 par(lwd=2, cex=2)
 par(mar=c(4,4,1,2))
@@ -250,7 +244,6 @@ nloptwrap <- lmer(Height~Weight+(1|ID),
 ```
 
 ```{R}
-
 #| echo: false
 par(lwd=2, cex=2)
 par(mar=c(4,4,1,2))
@@ -262,7 +255,6 @@ legend(2,13,c("bobyqa","nloptwrap"),col=c(2,1),lty=1)
 ```
 
 ```{R}
-
 #| echo: false
 par(lwd=2, cex=2)
 par(mar=c(4,4,1,2))
@@ -320,7 +312,6 @@ singularity at the center of galaxy the galaxy M87; from the [Event Horizon Tele
 
 ## Maximal models, boundaries and gradients: a nasty interaction
 ```{R}
-
 #| echo: false
 
 library("nlme")
@@ -350,7 +341,6 @@ sdsinglme <- sqrt(getVarCov(msinglme)[[1]])/sigma(msinglme)
 ```
 
 ```{R}
-
 #| echo: false
 par(lwd=2, cex=2)
 par(mar=c(4,4,1,2))
