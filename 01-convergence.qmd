@@ -242,9 +242,9 @@ plot(Weight,Height)
 segments(Weight,Height,Weight2,Height2)
 ```
 
-adapted from https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/
+adapted from <https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/>
 
-```{R echo=FALSE}
+```{R}
 minqa <- lmer(Height~Weight+(1|ID),
               data=DF,
               control=lmerControl(optimizer="bobyqa"),

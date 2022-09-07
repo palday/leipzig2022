@@ -17,24 +17,24 @@ Note that many of these questions are near duplicates, but I figure it's good to
 - Singularities: Criteria when it is safe to ignore?
 - Why should I even care about mixed models? Isn't ANOVA good enough?
 - Can you please contrast the outcome of a simple ANOVA with the outcome of a linear mixed model for one and the same data set?
-    - check out https://vasishth-statistics.blogspot.com/2018/04/a-little-known-fact-paired-t-test-is.html
+    - check out <https://vasishth-statistics.blogspot.com/2018/04/a-little-known-fact-paired-t-test-is.html>
     - [ANOVA is shortcut to model comparison and the choice of Type I vs. II vs. III sums of squares is a choice of which models you're comparing](https://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf)
-    - https://lindeloev.github.io/tests-as-linear/
+    - <https://lindeloev.github.io/tests-as-linear/>
 - When do we use the forward selection (i.e., drop-one-term) and when the backward selection (i.e., add-one-term strategy) during model fitting?
 - Best strategy for model selection? This seems to be almost a question of ideology, top-down, bottom-up, theory derived only...
 - Best way to estimate power?
     - simulation!
     - simr in R
     - MixedModelsSim in Julia
-    - see also  https://github.com/palday/freiburg2022/
-    - see also https://gitlab.com/palday/precision-is-the-goal/-/blob/master/presentation.md
-- How to compute Bayes Factors with lmer models (so far we use https://rpubs.com/lindeloev/bayes_factors; is this approach correct/optimal?)
+    - see also  <https://github.com/palday/freiburg2022/>
+    - see also <https://gitlab.com/palday/precision-is-the-goal/-/blob/master/presentation.md>
+- How to compute Bayes Factors with lmer models (so far we use <https://rpubs.com/lindeloev/bayes_factors>; is this approach correct/optimal?)
     - this is really tough!
 
 ## Assumptions and violations thereof
 - Partly from reviewer perspective: Violations of distribution assumptions, how vulnerable are LMMs in practice?
     - It depends...
-    - See [here](file:///home/phillip/Downloads/optional-stopping-in-the-garden.pdf)for some slides
+    - See [here](file:///home/phillip/Downloads/optional-stopping-in-the-garden.pdf) for some slides
     - Bottom line: standard errors are the first thing to go when the residual error isn't anywhere near normal
     - NB: the majority of assumptions are on the *conditional distribution*, i.e. the distribution of the residuals, not the *marginal distribution* (the "raw" distribution of the data)
 - Multicollinearity: How bad can it be?
@@ -60,8 +60,8 @@ Note that many of these questions are near duplicates, but I figure it's good to
     - centering is generally a good idea unless the original scale has a meaningful "natural" zero (see the documentaiton of [StandardizedPredictors.jl](https://beacon-biosignals.github.io/StandardizedPredictors.jl/stable/) for a nice example)
 - Different codings (dummy vs. effects vs. ...): What to use when and what can go wrong?
     - this is part of why visualization with the effects package in R or Effects.jl in Julia can be [quite helpful](https://beacon-biosignals.github.io/Effects.jl/stable/)
-    - Brehm, L., Alday, P. M., (2022). "Contrast coding choices in a decade of mixed models." Journal of Memory and Language 125, p. 104334. DOI: [10.1016/j.jml.2022.104334](https://doi.org/10.1016/j.jml.2022.104334) URL: https://osf.io/jkpxt/
-    - Schad, D. J., Vasishth, S., Hohenstein, S., & Kliegl, R. (2020). How to capitalize on a priori contrasts in linear (mixed) models: A tutorial. Journal of Memory and Language, 110, 104038. https://doi.org/10.1016/j.jml.2019.104038
+    - Brehm, L., Alday, P. M., (2022). "Contrast coding choices in a decade of mixed models." Journal of Memory and Language 125, p. 104334. DOI: [10.1016/j.jml.2022.104334](https://doi.org/10.1016/j.jml.2022.104334) URL: <https://osf.io/jkpxt/>
+    - Schad, D. J., Vasishth, S., Hohenstein, S., & Kliegl, R. (2020). How to capitalize on a priori contrasts in linear (mixed) models: A tutorial. Journal of Memory and Language, 110, 104038. <https://doi.org/10.1016/j.jml.2019.104038>
 - What are the benefits and costs of ortshogonality of contrasts (and their implications for the random-effects structure)?
 - How do we determine the correct order of polynomial trends (and why do we need to find out to being with)?
 

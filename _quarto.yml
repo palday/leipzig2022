@@ -1,12 +1,28 @@
+author: "Phillip M. Alday"
+date: "8 September 2022"
+
 project:
   execute-dir: project
-execute:
-  freeze: auto
-  cache: true
+  output-dir: _output
+  type: website
+jupyter: julia-1.8
 website:
   title: "Mixed-effects models: All the questions you were too afraid to ask  "
+  repo-url: https://github.com/palday/Leipzig2022
+  repo-actions: [edit, issue]
+  navbar:
+    background: primary
+    search: false
+    left:
+      - text: "Home"
+        file: index.qmd
+      - 01-convergence.qmd
+  sidebar:
+    style: "floating"
+    toc-depth: 4
 format:
   html:
+    selfcontained: true
     theme: sandstone
-
-jupyter: julia-1.8
+    toc: true
+    toc-depth: 4
