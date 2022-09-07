@@ -3,7 +3,7 @@ date: "8 September 2022"
 
 project:
   execute-dir: project
-  output-dir: _output
+  output-dir: docs
   type: website
 jupyter: julia-1.8
 website:
