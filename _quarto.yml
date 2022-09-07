@@ -17,6 +17,7 @@ website:
       - text: "Home"
         file: index.qmd
       - 01-convergence.qmd
+      - 02-shrinkage.qmd
   sidebar:
     style: "floating"
     toc-depth: 4
