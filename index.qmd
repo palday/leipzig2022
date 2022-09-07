@@ -1,0 +1,85 @@
+---
+title: "Mixed-effects models: All the questions you were too afraid to ask"
+author: "Phillip M. Alday"
+---
+
+Mixed-effects models have largely superseded classical repeated-measures ANOVA and paired t-tests in psychology and cognitive science and are quickly gaining ground in (cognitive) neuroscience.
+The underlying paradigm shift however has left many researchers with a number of questions, both general and domain specific.
+In this talk, I will cover a few core ideas underlying the application of mixed models and point toward other resources for more detailed follow-ups.
+
+# Questions
+
+Here are some of the questions that I've collected a few from my own teaching and from collaborators and their groups.
+Note that many of these questions are near duplicates, but I figure it's good to highlight the variations on a single underlying theme.
+
+## General
+- What do all these convergence warnings mean? Should I worry about them?
+- Singularities: Criteria when it is safe to ignore?
+- Why should I even care about mixed models? Isn't ANOVA good enough?
+- Can you please contrast the outcome of a simple ANOVA with the outcome of a linear mixed model for one and the same data set?
+    - check out <https://vasishth-statistics.blogspot.com/2018/04/a-little-known-fact-paired-t-test-is.html>
+    - [ANOVA is shortcut to model comparison and the choice of Type I vs. II vs. III sums of squares is a choice of which models you're comparing](https://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf)
+    - <https://lindeloev.github.io/tests-as-linear/>
+- When do we use the forward selection (i.e., drop-one-term) and when the backward selection (i.e., add-one-term strategy) during model fitting?
+- Best strategy for model selection? This seems to be almost a question of ideology, top-down, bottom-up, theory derived only...
+- Best way to estimate power?
+    - simulation!
+    - simr in R
+    - MixedModelsSim in Julia
+    - see also  <https://github.com/palday/freiburg2022/>
+    - see also <https://gitlab.com/palday/precision-is-the-goal/-/blob/master/presentation.md>
+- How to compute Bayes Factors with lmer models (so far we use <https://rpubs.com/lindeloev/bayes_factors>; is this approach correct/optimal?)
+    - this is really tough!
+
+## Assumptions and violations thereof
+- Partly from reviewer perspective: Violations of distribution assumptions, how vulnerable are LMMs in practice?
+    - It depends...
+    - See [here](file:///home/phillip/Downloads/optional-stopping-in-the-garden.pdf) for some slides
+    - Bottom line: standard errors are the first thing to go when the residual error isn't anywhere near normal
+    - NB: the majority of assumptions are on the *conditional distribution*, i.e. the distribution of the residuals, not the *marginal distribution* (the "raw" distribution of the data)
+- Multicollinearity: How bad can it be?
+    - generally speaking, multicollinearity inflates your standard errors and so consumes statistical power
+    - There are even arguments [against using tricks like residualization](https://doi.org/10.1016/j.ssresearch.2012.05.014) to compensate for multicollinearity and instead for collecting more data to compensate
+    - the [variance inflation factor](VIF) attempts to quantify the amount that the standard errors are inflated
+    - predictions based on your model aren't really impacted by multicollinearity because any perturbation of one coefficient pulls its interwined coefficient along
+    - near perfect multicollinearity can nonetheless cause [numerical problems](https://juliastats.org/MixedModels.jl/stable/rankdeficiency/#Fixed-effects)
+- How to analyze RTs with (G)LMMs (skewed distributions)?
+    - Lo S and Andrews S (2015) To transform or not to transform: using generalized linear mixed models to analyse reaction time data. Front. Psychol. 6:1171. doi: 10.3389/fpsyg.2015.01171
+    - look at *speed* instead of RT -- theories are often equally easy to formulate as speed ("participants are faster in condition A")
+    - Also checkout the general category of Box-Cox transformations
+- How to model heteroskedasticity in (G)LMM?
+    - in lme4/MixedModels.jl -- with some difficulty
+    - nlme, glmmTMB and brms offer better support for this
+    - but make sure that you really need it!
+- Is there a suitable link function?
+    - do you need a link function or a transformation of the response?
+
+## Contrast coding and standardizing
+- To standardize or not to standardize?
+    - whatever gives a natural interpretation!
+    - centering is generally a good idea unless the original scale has a meaningful "natural" zero (see the documentaiton of [StandardizedPredictors.jl](https://beacon-biosignals.github.io/StandardizedPredictors.jl/stable/) for a nice example)
+- Different codings (dummy vs. effects vs. ...): What to use when and what can go wrong?
+    - this is part of why visualization with the effects package in R or Effects.jl in Julia can be [quite helpful](https://beacon-biosignals.github.io/Effects.jl/stable/)
+    - Brehm, L., Alday, P. M., (2022). "Contrast coding choices in a decade of mixed models." Journal of Memory and Language 125, p. 104334. DOI: [10.1016/j.jml.2022.104334](https://doi.org/10.1016/j.jml.2022.104334) URL: <https://osf.io/jkpxt/>
+    - Schad, D. J., Vasishth, S., Hohenstein, S., & Kliegl, R. (2020). How to capitalize on a priori contrasts in linear (mixed) models: A tutorial. Journal of Memory and Language, 110, 104038. <https://doi.org/10.1016/j.jml.2019.104038>
+- What are the benefits and costs of ortshogonality of contrasts (and their implications for the random-effects structure)?
+- How do we determine the correct order of polynomial trends (and why do we need to find out to being with)?
+
+## Random effects
+- What are random effects actually?
+- How do I choose the correct random effects structure for my model + data?
+- What are the the consequences of misspecifying the random effects
+structure?
+- How to properly use RE PCA (for example how to identify the effects)?
+- What does `zerocorr` in MixedModels.jl / `||` in lme4 do? What does it mean for interpreting my data?
+- Should we first remove variance components for interaction terms or correlation parameters when selecting a model?
+
+## EEG / ERP
+- How do I handle EEG electrodes in mixed models? Are they fixed or
+random effects?
+- Can we model single-trial ERP data? Is there anything special to consider here?
+    - Yes, we can!
+    - The biggest challenge is appropriate selection of temporal / spatial ROIs and how to model timecourses/topography
+    - Kretzschmar, F., Alday, P. M., (submitted). "Principles of statistical analysis: old and new tools." In: Language Electrified. Techniques, Methods, Applications, and Future Perspectives in the Neurophysiological Investigation of Language. Ed. by Grimaldi, Mirko, Shtyrov, Yury, and Brattico, Elvira. DOI: 10.31234/osf.io/nyj3k
+- We would like to model single-trial PCA sores projected from group PCA loadings for ERP data. Would you consider this a valid approach?
+    - Yes, I think this could be a quite interesting approach, though I might consider ICA instead of PCA.

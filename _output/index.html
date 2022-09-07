@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.165">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Phillip M. Alday">
+<meta name="dcterms.date" content="2022-09-08">
+
+<title>Mixed-effects models: All the questions you were too afraid to ask - Mixed-effects models: All the questions you were too afraid to ask</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Mixed-effects models: All the questions you were too afraid to ask</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./index.html" aria-current="page">Home</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./01-convergence.html">Fitting a mixed model: convergence and singularity</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-shrinkage.html">Shrinkage and the correlation parameter</a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Mixed-effects models: All the questions you were too afraid to ask</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#questions" id="toc-questions" class="nav-link active" data-scroll-target="#questions">Questions</a>
+  <ul>
+  <li><a href="#general" id="toc-general" class="nav-link" data-scroll-target="#general">General</a></li>
+  <li><a href="#assumptions-and-violations-thereof" id="toc-assumptions-and-violations-thereof" class="nav-link" data-scroll-target="#assumptions-and-violations-thereof">Assumptions and violations thereof</a></li>
+  <li><a href="#contrast-coding-and-standardizing" id="toc-contrast-coding-and-standardizing" class="nav-link" data-scroll-target="#contrast-coding-and-standardizing">Contrast coding and standardizing</a></li>
+  <li><a href="#random-effects" id="toc-random-effects" class="nav-link" data-scroll-target="#random-effects">Random effects</a></li>
+  <li><a href="#eeg-erp" id="toc-eeg-erp" class="nav-link" data-scroll-target="#eeg-erp">EEG / ERP</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/palday/Leipzig2022/edit/main/index.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/palday/Leipzig2022/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Mixed-effects models: All the questions you were too afraid to ask</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Phillip M. Alday </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 8, 2022</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<p>Mixed-effects models have largely superseded classical repeated-measures ANOVA and paired t-tests in psychology and cognitive science and are quickly gaining ground in (cognitive) neuroscience. The underlying paradigm shift however has left many researchers with a number of questions, both general and domain specific. In this talk, I will cover a few core ideas underlying the application of mixed models and point toward other resources for more detailed follow-ups.</p>
+<section id="questions" class="level1">
+<h1>Questions</h1>
+<p>Here are some of the questions that I’ve collected a few from my own teaching and from collaborators and their groups. Note that many of these questions are near duplicates, but I figure it’s good to highlight the variations on a single underlying theme.</p>
+<section id="general" class="level2">
+<h2 class="anchored" data-anchor-id="general">General</h2>
+<ul>
+<li>What do all these convergence warnings mean? Should I worry about them?</li>
+<li>Singularities: Criteria when it is safe to ignore?</li>
+<li>Why should I even care about mixed models? Isn’t ANOVA good enough?</li>
+<li>Can you please contrast the outcome of a simple ANOVA with the outcome of a linear mixed model for one and the same data set?
+<ul>
+<li>check out <a href="https://vasishth-statistics.blogspot.com/2018/04/a-little-known-fact-paired-t-test-is.html" class="uri">https://vasishth-statistics.blogspot.com/2018/04/a-little-known-fact-paired-t-test-is.html</a></li>
+<li><a href="https://www.stats.ox.ac.uk/pub/MASS3/Exegeses.pdf">ANOVA is shortcut to model comparison and the choice of Type I vs.&nbsp;II vs.&nbsp;III sums of squares is a choice of which models you’re comparing</a></li>
+<li><a href="https://lindeloev.github.io/tests-as-linear/" class="uri">https://lindeloev.github.io/tests-as-linear/</a></li>
+</ul></li>
+<li>When do we use the forward selection (i.e., drop-one-term) and when the backward selection (i.e., add-one-term strategy) during model fitting?</li>
+<li>Best strategy for model selection? This seems to be almost a question of ideology, top-down, bottom-up, theory derived only…</li>
+<li>Best way to estimate power?
+<ul>
+<li>simulation!</li>
+<li>simr in R</li>
+<li>MixedModelsSim in Julia</li>
+<li>see also <a href="https://github.com/palday/freiburg2022/" class="uri">https://github.com/palday/freiburg2022/</a></li>
+<li>see also <a href="https://gitlab.com/palday/precision-is-the-goal/-/blob/master/presentation.md" class="uri">https://gitlab.com/palday/precision-is-the-goal/-/blob/master/presentation.md</a></li>
+</ul></li>
+<li>How to compute Bayes Factors with lmer models (so far we use <a href="https://rpubs.com/lindeloev/bayes_factors" class="uri">https://rpubs.com/lindeloev/bayes_factors</a>; is this approach correct/optimal?)
+<ul>
+<li>this is really tough!</li>
+</ul></li>
+</ul>
+</section>
+<section id="assumptions-and-violations-thereof" class="level2">
+<h2 class="anchored" data-anchor-id="assumptions-and-violations-thereof">Assumptions and violations thereof</h2>
+<ul>
+<li>Partly from reviewer perspective: Violations of distribution assumptions, how vulnerable are LMMs in practice?
+<ul>
+<li>It depends…</li>
+<li>See <a href="file:///home/phillip/Downloads/optional-stopping-in-the-garden.pdf">here</a> for some slides</li>
+<li>Bottom line: standard errors are the first thing to go when the residual error isn’t anywhere near normal</li>
+<li>NB: the majority of assumptions are on the <em>conditional distribution</em>, i.e.&nbsp;the distribution of the residuals, not the <em>marginal distribution</em> (the “raw” distribution of the data)</li>
+</ul></li>
+<li>Multicollinearity: How bad can it be?
+<ul>
+<li>generally speaking, multicollinearity inflates your standard errors and so consumes statistical power</li>
+<li>There are even arguments <a href="https://doi.org/10.1016/j.ssresearch.2012.05.014">against using tricks like residualization</a> to compensate for multicollinearity and instead for collecting more data to compensate</li>
+<li>the <a href="VIF">variance inflation factor</a> attempts to quantify the amount that the standard errors are inflated</li>
+<li>predictions based on your model aren’t really impacted by multicollinearity because any perturbation of one coefficient pulls its interwined coefficient along</li>
+<li>near perfect multicollinearity can nonetheless cause <a href="https://juliastats.org/MixedModels.jl/stable/rankdeficiency/#Fixed-effects">numerical problems</a></li>
+</ul></li>
+<li>How to analyze RTs with (G)LMMs (skewed distributions)?
+<ul>
+<li>Lo S and Andrews S (2015) To transform or not to transform: using generalized linear mixed models to analyse reaction time data. Front. Psychol. 6:1171. doi: 10.3389/fpsyg.2015.01171</li>
+<li>look at <em>speed</em> instead of RT – theories are often equally easy to formulate as speed (“participants are faster in condition A”)</li>
+<li>Also checkout the general category of Box-Cox transformations</li>
+</ul></li>
+<li>How to model heteroskedasticity in (G)LMM?
+<ul>
+<li>in lme4/MixedModels.jl – with some difficulty</li>
+<li>nlme, glmmTMB and brms offer better support for this</li>
+<li>but make sure that you really need it!</li>
+</ul></li>
+<li>Is there a suitable link function?
+<ul>
+<li>do you need a link function or a transformation of the response?</li>
+</ul></li>
+</ul>
+</section>
+<section id="contrast-coding-and-standardizing" class="level2">
+<h2 class="anchored" data-anchor-id="contrast-coding-and-standardizing">Contrast coding and standardizing</h2>
+<ul>
+<li>To standardize or not to standardize?
+<ul>
+<li>whatever gives a natural interpretation!</li>
+<li>centering is generally a good idea unless the original scale has a meaningful “natural” zero (see the documentaiton of <a href="https://beacon-biosignals.github.io/StandardizedPredictors.jl/stable/">StandardizedPredictors.jl</a> for a nice example)</li>
+</ul></li>
+<li>Different codings (dummy vs.&nbsp;effects vs.&nbsp;…): What to use when and what can go wrong?
+<ul>
+<li>this is part of why visualization with the effects package in R or Effects.jl in Julia can be <a href="https://beacon-biosignals.github.io/Effects.jl/stable/">quite helpful</a></li>
+<li>Brehm, L., Alday, P. M., (2022). “Contrast coding choices in a decade of mixed models.” Journal of Memory and Language 125, p.&nbsp;104334. DOI: <a href="https://doi.org/10.1016/j.jml.2022.104334">10.1016/j.jml.2022.104334</a> URL: <a href="https://osf.io/jkpxt/" class="uri">https://osf.io/jkpxt/</a></li>
+<li>Schad, D. J., Vasishth, S., Hohenstein, S., &amp; Kliegl, R. (2020). How to capitalize on a priori contrasts in linear (mixed) models: A tutorial. Journal of Memory and Language, 110, 104038. <a href="https://doi.org/10.1016/j.jml.2019.104038" class="uri">https://doi.org/10.1016/j.jml.2019.104038</a></li>
+</ul></li>
+<li>What are the benefits and costs of ortshogonality of contrasts (and their implications for the random-effects structure)?</li>
+<li>How do we determine the correct order of polynomial trends (and why do we need to find out to being with)?</li>
+</ul>
+</section>
+<section id="random-effects" class="level2">
+<h2 class="anchored" data-anchor-id="random-effects">Random effects</h2>
+<ul>
+<li>What are random effects actually?</li>
+<li>How do I choose the correct random effects structure for my model + data?</li>
+<li>What are the the consequences of misspecifying the random effects structure?</li>
+<li>How to properly use RE PCA (for example how to identify the effects)?</li>
+<li>What does <code>zerocorr</code> in MixedModels.jl / <code>||</code> in lme4 do? What does it mean for interpreting my data?</li>
+<li>Should we first remove variance components for interaction terms or correlation parameters when selecting a model?</li>
+</ul>
+</section>
+<section id="eeg-erp" class="level2">
+<h2 class="anchored" data-anchor-id="eeg-erp">EEG / ERP</h2>
+<ul>
+<li>How do I handle EEG electrodes in mixed models? Are they fixed or random effects?</li>
+<li>Can we model single-trial ERP data? Is there anything special to consider here?
+<ul>
+<li>Yes, we can!</li>
+<li>The biggest challenge is appropriate selection of temporal / spatial ROIs and how to model timecourses/topography</li>
+<li>Kretzschmar, F., Alday, P. M., (submitted). “Principles of statistical analysis: old and new tools.” In: Language Electrified. Techniques, Methods, Applications, and Future Perspectives in the Neurophysiological Investigation of Language. Ed. by Grimaldi, Mirko, Shtyrov, Yury, and Brattico, Elvira. DOI: 10.31234/osf.io/nyj3k</li>
+</ul></li>
+<li>We would like to model single-trial PCA sores projected from group PCA loadings for ERP data. Would you consider this a valid approach?
+<ul>
+<li>Yes, I think this could be a quite interesting approach, though I might consider ICA instead of PCA.</li>
+</ul></li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -1,0 +1,372 @@
+---
+title: "Fitting a mixed model: convergence and singularity"
+format: html
+---
+
+# What does fitting a frequentist mixed model do?
+
+## Maximum Likelihood Estimation (MLE)
+- Likelihood: the probability of the data given the model
+- Given a model specification, find the values of the model parameters that maximizes the likelihood
+- Find the version of specified model that best matches observed data
+
+> You need to remember that "likelihood" is a technical term. The likelihood of $H$, $Pr(O\|H)$, and the posterior probability of $H$, $Pr(H\|O)$, are different quantities and they can have different values. The likelihood of $H$ is the probability that $H$ confers on $O$, not the probability that $O$ confers on $H$. Suppose you hear a noise coming from the attic of your house. You consider the hypothesis that there are gremlins up there bowling. The likelihood of this hypothesis is very high, since if there are gremlins bowling in the attic, there probably will be noise. But surely you don’t think that the noise makes it very probable that there are gremlins up there bowling. In this example, $Pr(O\|H)$ is high and $Pr(H\|O)$ is low. The gremlin hypothesis has a high likelihood (in the technical sense) but a low probability.
+
+Sober, E. (2008). Evidence and Evolution: the Logic Behind the Science. Cambridge University Press.
+
+## Some additional terminology
+- REML: Residualized Maximum Likelihood
+    - Not actually *the* likelihood
+    - Related to the $n$ vs. $n-1$ in e.g. calculating SDs
+        - If your sample sizes are small enough that this matters,
+          then your sample sizes are too small.
+- Deviance:
+    - "$-2 \log \text{Likelihood}$"
+    - (up to an additive constant, due to the difficulty in defining the fully saturated model required for the deviance)
+    - so maximizing the likelihood is the same as minimizing the deviance
+    - the difference in the deviance is the $\chi^2$ value in the likelihood ratio test computed by `anova()` in R
+        - differences on the log scale are the same as ratios on the original scale
+        - the additive constant cancels out
+
+## Optimization
+- Once the REML/ML/deviance criterion is defined,
+  we just need to find the value maximizes (REML,ML) / minimizes it (deviance).
+- It turns out that this problem only depends on the random effects and not on the fixed effects! (More precisely, for a given value of the random effects, we can directly compute the value of the fixed effects that maximizes the likelihood.)
+- This is called *function optimization*.
+- There are many techniques for this and many different implementations of each technique.
+- There are no free lunches and no optimizer which will always work the best.
+- This is why `lme4` allows you to pick your optimizer and change its settings.
+- Changes in the default optimization settings are often the cause of new warnings when updating your lme4 version.
+- For more information, see:
+    - `?convergence`
+    - `?lmerControl`
+- One bit of fine print: for numerical reasons, everything is scaled relative to the residual variance during the fitting process (but this is hidden from the user).
+
+## An example
+
+```{R}
+library("lme4")
+library("lattice")
+xyplot(Reaction ~ Days | Subject, sleepstudy, type = c("g","p","r"),
+       index = function(x,y) coef(lm(y ~ x))[1],
+       xlab = "Days of sleep deprivation",
+       ylab = "Average reaction time (ms)", aspect = "xy")
+
+```
+
+## Optimizing an intercept-only model
+
+Let's consider the intercept-only model, i.e. a model with only one variance component.
+
+```{R}
+
+m <- lmer(Reaction ~ 1 + Days + (1|Subject), data=sleepstudy, REML=FALSE)
+summary(m)
+```
+
+```{R}
+
+#| echo: false
+theta <- getME(m,"theta")
+print(theta)
+print(VarCorr(m))
+
+ff <- as.function(m)
+tvec <- seq(0,2,length=101)
+Lvec <- sapply(tvec,ff)
+par(bty="l",las=1)
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+plot(tvec,Lvec,type="l",
+     ylab="Deviance",
+     xlab="scaled random effects standard deviation",
+     ylim=c(1750,1901))
+points(theta,ff(theta),pch=16,col=1)
+```
+
+## Optimizing a model with intercept, slope and correlation
+
+```{R}
+
+m2 <- lmer(Reaction ~ 1 + Days + (1 + Days | Subject), data=sleepstudy, REML=FALSE)
+
+anova(m, m2)
+print(VarCorr(m2))
+```
+
+Partial image for intercept with constant (optimal) slope and correlation.
+```{R}
+
+#| echo: false
+theta2 <- getME(m2,"theta")
+ff2 <- function(x) as.function(m2)(c(x,theta2[2],theta2[3]))
+tvec2 <- seq(0,2,length=101)
+Lvec2 <- sapply(tvec2,ff2)
+par(bty="l",las=1)
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+plot(tvec,Lvec,type="l",
+     ylab="Deviance",
+     xlab="scaled random effects standard deviation",
+     ylim=c(1750,1901))
+points(theta,ff(theta),pch=16,col=1)
+lines(tvec2,Lvec2,col=4,lty=2,pch=6)
+points(theta2[1],as.function(m2)(theta2),pch=16,col=4)
+text(1.25, 1820, "Intercept only model")
+text(1.0, 1780, "Intercept and slope model", col=4)
+```
+
+## Optimizing a model with intercept, slope and no correlation
+```{R}
+
+m3 <- lmer(Reaction ~ 1 + Days + (1 + Days || Subject), data=sleepstudy, REML=FALSE)
+summary(m3)
+```
+
+```{R}
+
+#| echo: false
+theta3 <- getME(m3,"theta")
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+ff3 <- function(x,y) as.function(m3)(c(x,y))
+ff3v <- Vectorize(ff3)
+xx <- seq(0,2,length=51)
+Lvec3 <- outer(xx, xx, ff3v)
+contour(xx,xx,Lvec3, nlevels=20,xlab="Intercept",ylab="Days",main="Deviance by Scaled RE SD",labcex=1.5)
+points(theta3[1],theta3[2],pch=16,col=6)
+```
+
+# Convergence Failure
+
+## Optimization failures I: Failing post-optimization tests
+- Optimizers have ways to detect when they have reached an optimum.
+- If they didn't, they wouldn't know how to stop!
+- However, optimization may be stopped prematurely for various reasons :
+    - limit on number of function evaluations (`maxeval`)
+    - not enough improvement in deviance with additional steps (`ftol_abs`, `ftol_rel`)
+    - not enough change in `theta` / RE estimates with additional steps (`xtol_abs`, `xtol_rel`)
+- Trying to different options or even a different optimizer are good strategies.
+- If an optimizer thinks that it has converged, then that's generally the best convergence diagnostic.
+- There are a few post-hoc tests we can run, but they are not guaranteed to be accurate.
+
+
+Option names are all for `nloptwrap`, the current default `lmer()` optimizer. `glmer` still uses `bobyqa`, which has different names ....
+
+## Checking derivatives
+- The gradient is a higher dimensional generalization of the derivative or instaneous rate of change.
+- In lower dimensions, we can visualize this as the slope of a tangent line at a given point.
+- When we've arrived at an optimum *not at the boundary*, then this slope is zero.
+- BUT this check is slow and inaccurate
+    - the gradient is approximated by finite differences
+    - which is not particularly accurate in its own right
+    - and involves lots of slow function evaluations
+    - and is *scale dependent*
+
+
+```{R}
+
+#| echo: false
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+plot(tvec2,Lvec2,type="l",
+     ylab="Deviance",
+     xlab="scaled random effects standard deviation",
+     ylim=c(1748,1775))
+points(theta2[1],as.function(m2)(theta2),pch=16,col=4)
+arg_min <- which.min(Lvec2)
+b <- ((Lvec2[arg_min+1]-Lvec2[arg_min]) + (Lvec2[arg_min]-Lvec2[arg_min-1])) / 2
+
+a <- Lvec2[arg_min] - b * tvec2[arg_min]
+abline(a=a,b=b,lty=2)
+text(tvec2[arg_min],1750,label=sprintf("Estimated slope: %f", b))
+```
+
+## Equality is not what it seems
+```{R}
+0.1 + 0.1 + 0.1 - 0.3
+````
+
+- Computers don't store infinite digits and internally use a form of scientific notation (*floating point*, 1e-16 => $1 \times 10^{-16}$).
+- Exact equality doesn't hold in the presence of rounding.
+- Flat deviance curves may not be numerically flat with coarse approximations.
+- Similarly, Numerically flat curves may not be actually flat .
+
+## Recommendations for warnings about the gradient and Hessian
+- Try setting stricter convergence criteria and allowing more iterations (`ftol_rel`, `xtol_rel`, `maxeval`).
+- Check your overall model fit by plotting fitted vs. observed, etc. to make sure your model isn't misspecified.
+- Consider setting `control=lmerControl(calc.derivs=FALSE)`.
+    - The derivative check takes a loooooong time
+    - And tends to deliver false positives with maximal models.
+- BUT PAY ATTENTION TO YOUR MODEL FIT AND YOUR OPTIMIZER'S OWN WARNINGS!!!
+- Note that warnings about convergence failure, e.g. a Hessian that is not positive definite, may still indicate genuine problems -- or that you should at least consider rescaling, as the warnings tell you to do.
+- In MixedModels.jl, we only use the optimizer's own checks and do not perform any post-hoc checks.
+
+## Optimization failures II
+
+Successfully completed optimization may not be the global optimum, but only a local one.
+
+```{R}
+
+#| echo: false
+
+# from https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/384539#384539
+
+set.seed(21)
+Height=1:10; Height=Height+runif(10,min=0,max=3) #First height measurement
+Weight=1:10; Weight=Weight+runif(10,min=0,max=3) #First weight measurement
+
+Height2=Height+runif(10,min=0,max=1) #second height measurement
+Weight2=Weight-runif(10,min=0,max=1) #second weight measurement
+
+Height=c(Height,Height2) #combine height and wight measurements
+Weight=c(Weight,Weight2)
+
+DF=data.frame(Height,Weight) #generate data frame
+DF$ID=as.factor(rep(1:10,2)) #add subject ID
+DF$Number=as.factor(c(rep(1,10),rep(2,10))) #difference
+```
+
+```{R}
+
+#| echo: false
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+plot(Weight,Height)
+segments(Weight,Height,Weight2,Height2)
+```
+
+adapted from <https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/>
+
+```{R}
+minqa <- lmer(Height~Weight+(1|ID),
+              data=DF,
+              control=lmerControl(optimizer="bobyqa"),
+              REML=FALSE)
+nloptwrap <- lmer(Height~Weight+(1|ID),
+              data=DF,
+              control=lmerControl(optimizer="nloptwrap"),
+              REML=FALSE)
+```
+
+```{R}
+
+#| echo: false
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+plot(Weight,Height)
+segments(Weight,Height,Weight2,Height2)
+abline(fixef(minqa)[1],fixef(minqa)[2],col=2)
+abline(fixef(nloptwrap)[1],fixef(nloptwrap)[2],col=1)
+legend(2,13,c("bobyqa","nloptwrap"),col=c(2,1),lty=1)
+```
+
+```{R}
+
+#| echo: false
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+sd.minqa <- getME(minqa,"theta")
+sd.nloptwrap <- getME(nloptwrap,"theta")
+
+ff <- as.function(minqa)
+tvec <- seq(0,20,length=101)
+Lvec <- sapply(tvec,ff)
+par(bty="l",las=1)
+plot(tvec,Lvec,type="l",
+     ylab="Deviance",
+     xlab="scaled random effects standard deviation",
+     lwd = 2)
+#abline(v=1,lty=2)
+points(sd.minqa,ff(sd.minqa),pch=16,col=2)
+points(sd.nloptwrap,ff(sd.nloptwrap),pch=16,col=1)
+legend(10,76,c("bobyqa","nloptwrap"),col=c(2,1),pch=16)
+```
+
+# The problems with maximal models
+
+## Which n counts?
+- For a 2x2 within-subject design with "maximal" random slopes, we have 10 parameters!
+    - 4 standard deviations
+        - 1 intercept
+        - 2 main effects
+        - 1 interaction
+    - 6 correlations
+        - (4 SDs * 3 other SDs) / 2 because order doesn't matter
+- With typical 20-30 participant designs, we only have 20-30 levels of the grouping variable
+- So we only have 2-3 "samples" per parameter we're trying to estimate -- expect noisy estimates and overfitting!
+- For a 2x2x2 design, we have more parameters (34) than samples!
+- (The same math holds for item RE.)
+- It is not the total number of observations that matters for RE but rather the number of levels of the grouping variable!
+
+## Boundary fits
+- One of the innovations of lme4 compared to its predecessor nlme is its ability to fit models with optima at the boundaries, e.g. when a random effect goes to zero.
+- Note that this does *not* mean that there is no between participant/group variation, but rather that there is no variation not captured by the residual variation.
+- This lack of variation beyond the residual variation may just be due to lack of power to detect it!
+
+# Singularities
+![Nature doesn't mind singularities, but they're still terrifying](blackhole-20190410-78m-800x466.png)
+
+singularity at the center of galaxy the galaxy M87; from the [Event Horizon Telescope](https://eventhorizontelescope.org/)
+
+## Boundary fits are singular fits
+- Numerically, boundary fits have non-invertible, i.e. *singular* matrices.
+- One or more of the REs being numerically zero is one possibility; however, not the only one.
+- If any linear combination of REs is zero, then this also yields a singular / boundary fit. For a geometric interpretation, think of a sloping ceiling -- you may not be able to get to the edge of the floor nor the complete top of the building, but the combination of constraints leading to you hitting an edge.
+- Singular fits are not problematic per se -- they are mathematically well-defined and it is possible that the singular fit is actually the best description of the data.
+- However, they are often indicative of overfitting, e.g. because you don't have enough data to distinguish group variation from residual variation.
+- This overfitting, or equivalently, lack of power is a problem.
+- Singular fits are also slow to compute. So simplify your model or gather more data.
+
+## Maximal models, boundaries and gradients: a nasty interaction
+```{R}
+
+#| echo: false
+
+library("nlme")
+set.seed(21)
+Weight=1:10; Weight=Weight+runif(10,min=0,max=3) #First weight measurement
+Weight = c(Weight, Weight)# + runif(10,min=-1e-5,max=1e-5))
+Height = 0.8017481 * Weight + 2.33605 + rnorm(20,mean=0,sd=1)
+
+DFsing=data.frame(Height,Weight) #generate data frame
+DFsing$ID=as.factor(rep(1:10,2)) #add subject ID
+DFsing$Number=as.factor(c(rep(1,10),rep(2,10))) #difference
+
+msingular = lmer(Height~Weight+(1|ID),data=DFsing,
+                 REML=FALSE,
+                 control=lmerControl(optimizer="nloptwrap",
+                                     calc.derivs = FALSE))
+summary(msingular)
+
+msinglme=lme(Height~Weight,random=~1|ID,data=DFsing, method="ML")
+ff <- as.function(msingular)
+
+tvec <- seq(0,5,length=101)
+Lvec <- sapply(tvec,ff)
+par(bty="l",las=1)
+sdsing <- getME(msingular,"theta")
+sdsinglme <- sqrt(getVarCov(msinglme)[[1]])/sigma(msinglme)
+```
+
+```{R}
+
+#| echo: false
+par(lwd=2, cex=2)
+par(mar=c(4,4,1,2))
+plot(tvec,Lvec,type="l",
+     ylab="deviance",
+     xlab="scaled random effects standard deviation")
+points(sdsinglme,ff(sdsing),pch=16,col=4)
+points(sdsing,ff(sdsing),pch=16,col=2)
+text(3,60,label=sprintf("nlme: %f\nlme4: %f", sdsinglme,sdsing))
+```
+
+## rePCA
+- `rePCA()` performs PCA on the random-effects matrix.
+- This is useful for determining the *effective dimensionality* of our RE -- in other words, how many RE terms are supported by your data.
+- For the `sleepstudy`, we could get 96% of the variance explained with one RE term!
+```{R}
+summary(rePCA(m2))
+```
+- see Bates et al. (2015), "Parsimonious Mixed Models".
