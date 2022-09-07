@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.1.165">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Phillip M. Alday">
+<meta name="dcterms.date" content="2022-09-08">
+
+<title>Mixed-effects models: All the questions you were too afraid to ask - Fitting a mixed model: convergence and singularity</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { color: #008000; } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { color: #008000; font-weight: bold; } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Mixed-effects models: All the questions you were too afraid to ask</span>
+    </a>
+  </div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html">Home</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./01-convergence.html" aria-current="page">Fitting a mixed model: convergence and singularity</a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-shrinkage.html">Shrinkage and the correlation parameter</a>
+  </li>  
+</ul>
+              <div id="quarto-search" class="" title="Search"></div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Fitting a mixed model: convergence and singularity</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-does-fitting-a-frequentist-mixed-model-do" id="toc-what-does-fitting-a-frequentist-mixed-model-do" class="nav-link active" data-scroll-target="#what-does-fitting-a-frequentist-mixed-model-do">What does fitting a frequentist mixed model do?</a>
+  <ul>
+  <li><a href="#maximum-likelihood-estimation-mle" id="toc-maximum-likelihood-estimation-mle" class="nav-link" data-scroll-target="#maximum-likelihood-estimation-mle">Maximum Likelihood Estimation (MLE)</a></li>
+  <li><a href="#some-additional-terminology" id="toc-some-additional-terminology" class="nav-link" data-scroll-target="#some-additional-terminology">Some additional terminology</a></li>
+  <li><a href="#optimization" id="toc-optimization" class="nav-link" data-scroll-target="#optimization">Optimization</a></li>
+  <li><a href="#an-example" id="toc-an-example" class="nav-link" data-scroll-target="#an-example">An example</a></li>
+  <li><a href="#optimizing-an-intercept-only-model" id="toc-optimizing-an-intercept-only-model" class="nav-link" data-scroll-target="#optimizing-an-intercept-only-model">Optimizing an intercept-only model</a></li>
+  <li><a href="#optimizing-a-model-with-intercept-slope-and-correlation" id="toc-optimizing-a-model-with-intercept-slope-and-correlation" class="nav-link" data-scroll-target="#optimizing-a-model-with-intercept-slope-and-correlation">Optimizing a model with intercept, slope and correlation</a></li>
+  <li><a href="#optimizing-a-model-with-intercept-slope-and-no-correlation" id="toc-optimizing-a-model-with-intercept-slope-and-no-correlation" class="nav-link" data-scroll-target="#optimizing-a-model-with-intercept-slope-and-no-correlation">Optimizing a model with intercept, slope and no correlation</a></li>
+  </ul></li>
+  <li><a href="#convergence-failure" id="toc-convergence-failure" class="nav-link" data-scroll-target="#convergence-failure">Convergence Failure</a>
+  <ul>
+  <li><a href="#optimization-failures-i-failing-post-optimization-tests" id="toc-optimization-failures-i-failing-post-optimization-tests" class="nav-link" data-scroll-target="#optimization-failures-i-failing-post-optimization-tests">Optimization failures I: Failing post-optimization tests</a></li>
+  <li><a href="#checking-derivatives" id="toc-checking-derivatives" class="nav-link" data-scroll-target="#checking-derivatives">Checking derivatives</a></li>
+  <li><a href="#equality-is-not-what-it-seems" id="toc-equality-is-not-what-it-seems" class="nav-link" data-scroll-target="#equality-is-not-what-it-seems">Equality is not what it seems</a></li>
+  <li><a href="#recommendations-for-warnings-about-the-gradient-and-hessian" id="toc-recommendations-for-warnings-about-the-gradient-and-hessian" class="nav-link" data-scroll-target="#recommendations-for-warnings-about-the-gradient-and-hessian">Recommendations for warnings about the gradient and Hessian</a></li>
+  <li><a href="#optimization-failures-ii" id="toc-optimization-failures-ii" class="nav-link" data-scroll-target="#optimization-failures-ii">Optimization failures II</a></li>
+  </ul></li>
+  <li><a href="#the-problems-with-maximal-models" id="toc-the-problems-with-maximal-models" class="nav-link" data-scroll-target="#the-problems-with-maximal-models">The problems with maximal models</a>
+  <ul>
+  <li><a href="#which-n-counts" id="toc-which-n-counts" class="nav-link" data-scroll-target="#which-n-counts">Which n counts?</a></li>
+  <li><a href="#boundary-fits" id="toc-boundary-fits" class="nav-link" data-scroll-target="#boundary-fits">Boundary fits</a></li>
+  </ul></li>
+  <li><a href="#singularities" id="toc-singularities" class="nav-link" data-scroll-target="#singularities">Singularities</a>
+  <ul>
+  <li><a href="#boundary-fits-are-singular-fits" id="toc-boundary-fits-are-singular-fits" class="nav-link" data-scroll-target="#boundary-fits-are-singular-fits">Boundary fits are singular fits</a></li>
+  <li><a href="#maximal-models-boundaries-and-gradients-a-nasty-interaction" id="toc-maximal-models-boundaries-and-gradients-a-nasty-interaction" class="nav-link" data-scroll-target="#maximal-models-boundaries-and-gradients-a-nasty-interaction">Maximal models, boundaries and gradients: a nasty interaction</a></li>
+  <li><a href="#repca" id="toc-repca" class="nav-link" data-scroll-target="#repca">rePCA</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/palday/Leipzig2022/edit/main/01-convergence.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/palday/Leipzig2022/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Fitting a mixed model: convergence and singularity</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Phillip M. Alday </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 8, 2022</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+</header>
+
+<section id="what-does-fitting-a-frequentist-mixed-model-do" class="level1">
+<h1>What does fitting a frequentist mixed model do?</h1>
+<section id="maximum-likelihood-estimation-mle" class="level2">
+<h2 class="anchored" data-anchor-id="maximum-likelihood-estimation-mle">Maximum Likelihood Estimation (MLE)</h2>
+<ul>
+<li>Likelihood: the probability of the data given the model</li>
+<li>Given a model specification, find the values of the model parameters that maximizes the likelihood</li>
+<li>Find the version of specified model that best matches observed data</li>
+</ul>
+<blockquote class="blockquote">
+<p>You need to remember that “likelihood” is a technical term. The likelihood of <span class="math inline">\(H\)</span>, <span class="math inline">\(Pr(O\|H)\)</span>, and the posterior probability of <span class="math inline">\(H\)</span>, <span class="math inline">\(Pr(H\|O)\)</span>, are different quantities and they can have different values. The likelihood of <span class="math inline">\(H\)</span> is the probability that <span class="math inline">\(H\)</span> confers on <span class="math inline">\(O\)</span>, not the probability that <span class="math inline">\(O\)</span> confers on <span class="math inline">\(H\)</span>. Suppose you hear a noise coming from the attic of your house. You consider the hypothesis that there are gremlins up there bowling. The likelihood of this hypothesis is very high, since if there are gremlins bowling in the attic, there probably will be noise. But surely you don’t think that the noise makes it very probable that there are gremlins up there bowling. In this example, <span class="math inline">\(Pr(O\|H)\)</span> is high and <span class="math inline">\(Pr(H\|O)\)</span> is low. The gremlin hypothesis has a high likelihood (in the technical sense) but a low probability.</p>
+</blockquote>
+<p>Sober, E. (2008). Evidence and Evolution: the Logic Behind the Science. Cambridge University Press.</p>
+</section>
+<section id="some-additional-terminology" class="level2">
+<h2 class="anchored" data-anchor-id="some-additional-terminology">Some additional terminology</h2>
+<ul>
+<li>REML: Residualized Maximum Likelihood
+<ul>
+<li>Not actually <em>the</em> likelihood</li>
+<li>Related to the <span class="math inline">\(n\)</span> vs.&nbsp;<span class="math inline">\(n-1\)</span> in e.g.&nbsp;calculating SDs
+<ul>
+<li>If your sample sizes are small enough that this matters, then your sample sizes are too small.</li>
+</ul></li>
+</ul></li>
+<li>Deviance:
+<ul>
+<li>“<span class="math inline">\(-2 \log \text{Likelihood}\)</span>”</li>
+<li>(up to an additive constant, due to the difficulty in defining the fully saturated model required for the deviance)</li>
+<li>so maximizing the likelihood is the same as minimizing the deviance</li>
+<li>the difference in the deviance is the <span class="math inline">\(\chi^2\)</span> value in the likelihood ratio test computed by <code>anova()</code> in R
+<ul>
+<li>differences on the log scale are the same as ratios on the original scale</li>
+<li>the additive constant cancels out</li>
+</ul></li>
+</ul></li>
+</ul>
+</section>
+<section id="optimization" class="level2">
+<h2 class="anchored" data-anchor-id="optimization">Optimization</h2>
+<ul>
+<li>Once the REML/ML/deviance criterion is defined, we just need to find the value maximizes (REML,ML) / minimizes it (deviance).</li>
+<li>It turns out that this problem only depends on the random effects and not on the fixed effects! (More precisely, for a given value of the random effects, we can directly compute the value of the fixed effects that maximizes the likelihood.)</li>
+<li>This is called <em>function optimization</em>.</li>
+<li>There are many techniques for this and many different implementations of each technique.</li>
+<li>There are no free lunches and no optimizer which will always work the best.</li>
+<li>This is why <code>lme4</code> allows you to pick your optimizer and change its settings.</li>
+<li>Changes in the default optimization settings are often the cause of new warnings when updating your lme4 version.</li>
+<li>For more information, see:
+<ul>
+<li><code>?convergence</code></li>
+<li><code>?lmerControl</code></li>
+</ul></li>
+<li>One bit of fine print: for numerical reasons, everything is scaled relative to the residual variance during the fitting process (but this is hidden from the user).</li>
+</ul>
+</section>
+<section id="an-example" class="level2">
+<h2 class="anchored" data-anchor-id="an-example">An example</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"lme4"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"lattice"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">xyplot</span>(Reaction <span class="sc">~</span> Days <span class="sc">|</span> Subject, sleepstudy, <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"g"</span>,<span class="st">"p"</span>,<span class="st">"r"</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">index =</span> <span class="cf">function</span>(x,y) <span class="fu">coef</span>(<span class="fu">lm</span>(y <span class="sc">~</span> x))[<span class="dv">1</span>],</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"Days of sleep deprivation"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Average reaction time (ms)"</span>, <span class="at">aspect =</span> <span class="st">"xy"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-1-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="optimizing-an-intercept-only-model" class="level2">
+<h2 class="anchored" data-anchor-id="optimizing-an-intercept-only-model">Optimizing an intercept-only model</h2>
+<p>Let’s consider the intercept-only model, i.e.&nbsp;a model with only one variance component.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">lmer</span>(Reaction <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> Days <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>Subject), <span class="at">data=</span>sleepstudy, <span class="at">REML=</span><span class="cn">FALSE</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: Reaction ~ 1 + Days + (1 | Subject)
+   Data: sleepstudy
+
+     AIC      BIC   logLik deviance df.resid 
+  1802.1   1814.9   -897.0   1794.1      176 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2347 -0.5544  0.0155  0.5257  4.2648 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ Subject  (Intercept) 1296.9   36.01   
+ Residual              954.5   30.90   
+Number of obs: 180, groups:  Subject, 18
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept) 251.4051     9.5062   26.45
+Days         10.4673     0.8017   13.06
+
+Correlation of Fixed Effects:
+     (Intr)
+Days -0.380</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>theta <span class="ot">&lt;-</span> <span class="fu">getME</span>(m,<span class="st">"theta"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(theta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Subject.(Intercept) 
+           1.165612 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">VarCorr</span>(m))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Groups   Name        Std.Dev.
+ Subject  (Intercept) 36.012  
+ Residual             30.895  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>ff <span class="ot">&lt;-</span> <span class="fu">as.function</span>(m)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tvec <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span>,<span class="at">length=</span><span class="dv">101</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>Lvec <span class="ot">&lt;-</span> <span class="fu">sapply</span>(tvec,ff)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">bty=</span><span class="st">"l"</span>,<span class="at">las=</span><span class="dv">1</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tvec,Lvec,<span class="at">type=</span><span class="st">"l"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">"Deviance"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"scaled random effects standard deviation"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">1750</span>,<span class="dv">1901</span>))</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(theta,<span class="fu">ff</span>(theta),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="optimizing-a-model-with-intercept-slope-and-correlation" class="level2">
+<h2 class="anchored" data-anchor-id="optimizing-a-model-with-intercept-slope-and-correlation">Optimizing a model with intercept, slope and correlation</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(Reaction <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> Days <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">+</span> Days <span class="sc">|</span> Subject), <span class="at">data=</span>sleepstudy, <span class="at">REML=</span><span class="cn">FALSE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(m, m2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data: sleepstudy
+Models:
+m: Reaction ~ 1 + Days + (1 | Subject)
+m2: Reaction ~ 1 + Days + (1 + Days | Subject)
+   npar    AIC    BIC  logLik deviance  Chisq Df Pr(&gt;Chisq)    
+m     4 1802.1 1814.8 -897.04   1794.1                         
+m2    6 1763.9 1783.1 -875.97   1751.9 42.139  2  7.072e-10 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">VarCorr</span>(m2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Groups   Name        Std.Dev. Corr 
+ Subject  (Intercept) 23.7798       
+          Days         5.7168  0.081
+ Residual             25.5919       </code></pre>
+</div>
+</div>
+<p>Partial image for intercept with constant (optimal) slope and correlation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>theta2 <span class="ot">&lt;-</span> <span class="fu">getME</span>(m2,<span class="st">"theta"</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>ff2 <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">as.function</span>(m2)(<span class="fu">c</span>(x,theta2[<span class="dv">2</span>],theta2[<span class="dv">3</span>]))</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>tvec2 <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span>,<span class="at">length=</span><span class="dv">101</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>Lvec2 <span class="ot">&lt;-</span> <span class="fu">sapply</span>(tvec2,ff2)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">bty=</span><span class="st">"l"</span>,<span class="at">las=</span><span class="dv">1</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tvec,Lvec,<span class="at">type=</span><span class="st">"l"</span>,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">"Deviance"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"scaled random effects standard deviation"</span>,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">1750</span>,<span class="dv">1901</span>))</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(theta,<span class="fu">ff</span>(theta),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">1</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(tvec2,Lvec2,<span class="at">col=</span><span class="dv">4</span>,<span class="at">lty=</span><span class="dv">2</span>,<span class="at">pch=</span><span class="dv">6</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(theta2[<span class="dv">1</span>],<span class="fu">as.function</span>(m2)(theta2),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">4</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="fl">1.25</span>, <span class="dv">1820</span>, <span class="st">"Intercept only model"</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="fl">1.0</span>, <span class="dv">1780</span>, <span class="st">"Intercept and slope model"</span>, <span class="at">col=</span><span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="optimizing-a-model-with-intercept-slope-and-no-correlation" class="level2">
+<h2 class="anchored" data-anchor-id="optimizing-a-model-with-intercept-slope-and-no-correlation">Optimizing a model with intercept, slope and no correlation</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(Reaction <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> Days <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">+</span> Days <span class="sc">||</span> Subject), <span class="at">data=</span>sleepstudy, <span class="at">REML=</span><span class="cn">FALSE</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m3)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: Reaction ~ 1 + Days + ((1 | Subject) + (0 + Days | Subject))
+   Data: sleepstudy
+
+     AIC      BIC   logLik deviance df.resid 
+    1762     1778     -876     1752      175 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.9535 -0.4673  0.0239  0.4625  5.1883 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ Subject   (Intercept) 584.27   24.172  
+ Subject.1 Days         33.63    5.799  
+ Residual              653.12   25.556  
+Number of obs: 180, groups:  Subject, 18
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  251.405      6.708   37.48
+Days          10.467      1.519    6.89
+
+Correlation of Fixed Effects:
+     (Intr)
+Days -0.194</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>theta3 <span class="ot">&lt;-</span> <span class="fu">getME</span>(m3,<span class="st">"theta"</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>ff3 <span class="ot">&lt;-</span> <span class="cf">function</span>(x,y) <span class="fu">as.function</span>(m3)(<span class="fu">c</span>(x,y))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>ff3v <span class="ot">&lt;-</span> <span class="fu">Vectorize</span>(ff3)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>xx <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">2</span>,<span class="at">length=</span><span class="dv">51</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>Lvec3 <span class="ot">&lt;-</span> <span class="fu">outer</span>(xx, xx, ff3v)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">contour</span>(xx,xx,Lvec3, <span class="at">nlevels=</span><span class="dv">20</span>,<span class="at">xlab=</span><span class="st">"Intercept"</span>,<span class="at">ylab=</span><span class="st">"Days"</span>,<span class="at">main=</span><span class="st">"Deviance by Scaled RE SD"</span>,<span class="at">labcex=</span><span class="fl">1.5</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(theta3[<span class="dv">1</span>],theta3[<span class="dv">2</span>],<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">6</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="convergence-failure" class="level1">
+<h1>Convergence Failure</h1>
+<section id="optimization-failures-i-failing-post-optimization-tests" class="level2">
+<h2 class="anchored" data-anchor-id="optimization-failures-i-failing-post-optimization-tests">Optimization failures I: Failing post-optimization tests</h2>
+<ul>
+<li>Optimizers have ways to detect when they have reached an optimum.</li>
+<li>If they didn’t, they wouldn’t know how to stop!</li>
+<li>However, optimization may be stopped prematurely for various reasons :
+<ul>
+<li>limit on number of function evaluations (<code>maxeval</code>)</li>
+<li>not enough improvement in deviance with additional steps (<code>ftol_abs</code>, <code>ftol_rel</code>)</li>
+<li>not enough change in <code>theta</code> / RE estimates with additional steps (<code>xtol_abs</code>, <code>xtol_rel</code>)</li>
+</ul></li>
+<li>Trying to different options or even a different optimizer are good strategies.</li>
+<li>If an optimizer thinks that it has converged, then that’s generally the best convergence diagnostic.</li>
+<li>There are a few post-hoc tests we can run, but they are not guaranteed to be accurate.</li>
+</ul>
+<p>Option names are all for <code>nloptwrap</code>, the current default <code>lmer()</code> optimizer. <code>glmer</code> still uses <code>bobyqa</code>, which has different names ….</p>
+</section>
+<section id="checking-derivatives" class="level2">
+<h2 class="anchored" data-anchor-id="checking-derivatives">Checking derivatives</h2>
+<ul>
+<li>The gradient is a higher dimensional generalization of the derivative or instaneous rate of change.</li>
+<li>In lower dimensions, we can visualize this as the slope of a tangent line at a given point.</li>
+<li>When we’ve arrived at an optimum <em>not at the boundary</em>, then this slope is zero.</li>
+<li>BUT this check is slow and inaccurate
+<ul>
+<li>the gradient is approximated by finite differences</li>
+<li>which is not particularly accurate in its own right</li>
+<li>and involves lots of slow function evaluations</li>
+<li>and is <em>scale dependent</em></li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tvec2,Lvec2,<span class="at">type=</span><span class="st">"l"</span>,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">"Deviance"</span>,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"scaled random effects standard deviation"</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylim=</span><span class="fu">c</span>(<span class="dv">1748</span>,<span class="dv">1775</span>))</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(theta2[<span class="dv">1</span>],<span class="fu">as.function</span>(m2)(theta2),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">4</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>arg_min <span class="ot">&lt;-</span> <span class="fu">which.min</span>(Lvec2)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> ((Lvec2[arg_min<span class="sc">+</span><span class="dv">1</span>]<span class="sc">-</span>Lvec2[arg_min]) <span class="sc">+</span> (Lvec2[arg_min]<span class="sc">-</span>Lvec2[arg_min<span class="dv">-1</span>])) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;-</span> Lvec2[arg_min] <span class="sc">-</span> b <span class="sc">*</span> tvec2[arg_min]</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">a=</span>a,<span class="at">b=</span>b,<span class="at">lty=</span><span class="dv">2</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(tvec2[arg_min],<span class="dv">1750</span>,<span class="at">label=</span><span class="fu">sprintf</span>(<span class="st">"Estimated slope: %f"</span>, b))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="equality-is-not-what-it-seems" class="level2">
+<h2 class="anchored" data-anchor-id="equality-is-not-what-it-seems">Equality is not what it seems</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fl">0.1</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">-</span> <span class="fl">0.3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5.551115e-17</code></pre>
+</div>
+</div>
+<ul>
+<li>Computers don’t store infinite digits and internally use a form of scientific notation (<em>floating point</em>, 1e-16 =&gt; <span class="math inline">\(1 \times 10^{-16}\)</span>).</li>
+<li>Exact equality doesn’t hold in the presence of rounding.</li>
+<li>Flat deviance curves may not be numerically flat with coarse approximations.</li>
+<li>Similarly, Numerically flat curves may not be actually flat .</li>
+</ul>
+</section>
+<section id="recommendations-for-warnings-about-the-gradient-and-hessian" class="level2">
+<h2 class="anchored" data-anchor-id="recommendations-for-warnings-about-the-gradient-and-hessian">Recommendations for warnings about the gradient and Hessian</h2>
+<ul>
+<li>Try setting stricter convergence criteria and allowing more iterations (<code>ftol_rel</code>, <code>xtol_rel</code>, <code>maxeval</code>).</li>
+<li>Check your overall model fit by plotting fitted vs.&nbsp;observed, etc. to make sure your model isn’t misspecified.</li>
+<li>Consider setting <code>control=lmerControl(calc.derivs=FALSE)</code>.
+<ul>
+<li>The derivative check takes a loooooong time</li>
+<li>And tends to deliver false positives with maximal models.</li>
+</ul></li>
+<li>BUT PAY ATTENTION TO YOUR MODEL FIT AND YOUR OPTIMIZER’S OWN WARNINGS!!!</li>
+<li>Note that warnings about convergence failure, e.g.&nbsp;a Hessian that is not positive definite, may still indicate genuine problems – or that you should at least consider rescaling, as the warnings tell you to do.</li>
+<li>In MixedModels.jl, we only use the optimizer’s own checks and do not perform any post-hoc checks.</li>
+</ul>
+</section>
+<section id="optimization-failures-ii" class="level2">
+<h2 class="anchored" data-anchor-id="optimization-failures-ii">Optimization failures II</h2>
+<p>Successfully completed optimization may not be the global optimum, but only a local one.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># from https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/384539#384539</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">21</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>Height<span class="ot">=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>; Height<span class="ot">=</span>Height<span class="sc">+</span><span class="fu">runif</span>(<span class="dv">10</span>,<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="dv">3</span>) <span class="co">#First height measurement</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>Weight<span class="ot">=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>; Weight<span class="ot">=</span>Weight<span class="sc">+</span><span class="fu">runif</span>(<span class="dv">10</span>,<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="dv">3</span>) <span class="co">#First weight measurement</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>Height2<span class="ot">=</span>Height<span class="sc">+</span><span class="fu">runif</span>(<span class="dv">10</span>,<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="dv">1</span>) <span class="co">#second height measurement</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>Weight2<span class="ot">=</span>Weight<span class="sc">-</span><span class="fu">runif</span>(<span class="dv">10</span>,<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="dv">1</span>) <span class="co">#second weight measurement</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>Height<span class="ot">=</span><span class="fu">c</span>(Height,Height2) <span class="co">#combine height and wight measurements</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>Weight<span class="ot">=</span><span class="fu">c</span>(Weight,Weight2)</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>DF<span class="ot">=</span><span class="fu">data.frame</span>(Height,Weight) <span class="co">#generate data frame</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>DF<span class="sc">$</span>ID<span class="ot">=</span><span class="fu">as.factor</span>(<span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">2</span>)) <span class="co">#add subject ID</span></span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>DF<span class="sc">$</span>Number<span class="ot">=</span><span class="fu">as.factor</span>(<span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">10</span>),<span class="fu">rep</span>(<span class="dv">2</span>,<span class="dv">10</span>))) <span class="co">#difference</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Weight,Height)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">segments</span>(Weight,Height,Weight2,Height2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>adapted from <a href="https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/" class="uri">https://stats.stackexchange.com/questions/384528/lme-and-lmer-giving-conflicting-results/</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>minqa <span class="ot">&lt;-</span> <span class="fu">lmer</span>(Height<span class="sc">~</span>Weight<span class="sc">+</span>(<span class="dv">1</span><span class="sc">|</span>ID),</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>              <span class="at">data=</span>DF,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>              <span class="at">control=</span><span class="fu">lmerControl</span>(<span class="at">optimizer=</span><span class="st">"bobyqa"</span>),</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>              <span class="at">REML=</span><span class="cn">FALSE</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>nloptwrap <span class="ot">&lt;-</span> <span class="fu">lmer</span>(Height<span class="sc">~</span>Weight<span class="sc">+</span>(<span class="dv">1</span><span class="sc">|</span>ID),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>              <span class="at">data=</span>DF,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>              <span class="at">control=</span><span class="fu">lmerControl</span>(<span class="at">optimizer=</span><span class="st">"nloptwrap"</span>),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>              <span class="at">REML=</span><span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(Weight,Height)</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="fu">segments</span>(Weight,Height,Weight2,Height2)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="fu">fixef</span>(minqa)[<span class="dv">1</span>],<span class="fu">fixef</span>(minqa)[<span class="dv">2</span>],<span class="at">col=</span><span class="dv">2</span>)</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="fu">fixef</span>(nloptwrap)[<span class="dv">1</span>],<span class="fu">fixef</span>(nloptwrap)[<span class="dv">2</span>],<span class="at">col=</span><span class="dv">1</span>)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="dv">2</span>,<span class="dv">13</span>,<span class="fu">c</span>(<span class="st">"bobyqa"</span>,<span class="st">"nloptwrap"</span>),<span class="at">col=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>),<span class="at">lty=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>sd.minqa <span class="ot">&lt;-</span> <span class="fu">getME</span>(minqa,<span class="st">"theta"</span>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>sd.nloptwrap <span class="ot">&lt;-</span> <span class="fu">getME</span>(nloptwrap,<span class="st">"theta"</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>ff <span class="ot">&lt;-</span> <span class="fu">as.function</span>(minqa)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>tvec <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">20</span>,<span class="at">length=</span><span class="dv">101</span>)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>Lvec <span class="ot">&lt;-</span> <span class="fu">sapply</span>(tvec,ff)</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">bty=</span><span class="st">"l"</span>,<span class="at">las=</span><span class="dv">1</span>)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tvec,Lvec,<span class="at">type=</span><span class="st">"l"</span>,</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">"Deviance"</span>,</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"scaled random effects standard deviation"</span>,</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">lwd =</span> <span class="dv">2</span>)</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="co">#abline(v=1,lty=2)</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(sd.minqa,<span class="fu">ff</span>(sd.minqa),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">2</span>)</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(sd.nloptwrap,<span class="fu">ff</span>(sd.nloptwrap),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">1</span>)</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="dv">10</span>,<span class="dv">76</span>,<span class="fu">c</span>(<span class="st">"bobyqa"</span>,<span class="st">"nloptwrap"</span>),<span class="at">col=</span><span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>),<span class="at">pch=</span><span class="dv">16</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="the-problems-with-maximal-models" class="level1">
+<h1>The problems with maximal models</h1>
+<section id="which-n-counts" class="level2">
+<h2 class="anchored" data-anchor-id="which-n-counts">Which n counts?</h2>
+<ul>
+<li>For a 2x2 within-subject design with “maximal” random slopes, we have 10 parameters!
+<ul>
+<li>4 standard deviations
+<ul>
+<li>1 intercept</li>
+<li>2 main effects</li>
+<li>1 interaction</li>
+</ul></li>
+<li>6 correlations
+<ul>
+<li>(4 SDs * 3 other SDs) / 2 because order doesn’t matter</li>
+</ul></li>
+</ul></li>
+<li>With typical 20-30 participant designs, we only have 20-30 levels of the grouping variable</li>
+<li>So we only have 2-3 “samples” per parameter we’re trying to estimate – expect noisy estimates and overfitting!</li>
+<li>For a 2x2x2 design, we have more parameters (34) than samples!</li>
+<li>(The same math holds for item RE.)</li>
+<li>It is not the total number of observations that matters for RE but rather the number of levels of the grouping variable!</li>
+</ul>
+</section>
+<section id="boundary-fits" class="level2">
+<h2 class="anchored" data-anchor-id="boundary-fits">Boundary fits</h2>
+<ul>
+<li>One of the innovations of lme4 compared to its predecessor nlme is its ability to fit models with optima at the boundaries, e.g.&nbsp;when a random effect goes to zero.</li>
+<li>Note that this does <em>not</em> mean that there is no between participant/group variation, but rather that there is no variation not captured by the residual variation.</li>
+<li>This lack of variation beyond the residual variation may just be due to lack of power to detect it!</li>
+</ul>
+</section>
+</section>
+<section id="singularities" class="level1">
+<h1>Singularities</h1>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="blackhole-20190410-78m-800x466.png" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">Nature doesn’t mind singularities, but they’re still terrifying</figcaption><p></p>
+</figure>
+</div>
+<p>singularity at the center of galaxy the galaxy M87; from the <a href="https://eventhorizontelescope.org/">Event Horizon Telescope</a></p>
+<section id="boundary-fits-are-singular-fits" class="level2">
+<h2 class="anchored" data-anchor-id="boundary-fits-are-singular-fits">Boundary fits are singular fits</h2>
+<ul>
+<li>Numerically, boundary fits have non-invertible, i.e.&nbsp;<em>singular</em> matrices.</li>
+<li>One or more of the REs being numerically zero is one possibility; however, not the only one.</li>
+<li>If any linear combination of REs is zero, then this also yields a singular / boundary fit. For a geometric interpretation, think of a sloping ceiling – you may not be able to get to the edge of the floor nor the complete top of the building, but the combination of constraints leading to you hitting an edge.</li>
+<li>Singular fits are not problematic per se – they are mathematically well-defined and it is possible that the singular fit is actually the best description of the data.</li>
+<li>However, they are often indicative of overfitting, e.g.&nbsp;because you don’t have enough data to distinguish group variation from residual variation.</li>
+<li>This overfitting, or equivalently, lack of power is a problem.</li>
+<li>Singular fits are also slow to compute. So simplify your model or gather more data.</li>
+</ul>
+</section>
+<section id="maximal-models-boundaries-and-gradients-a-nasty-interaction" class="level2">
+<h2 class="anchored" data-anchor-id="maximal-models-boundaries-and-gradients-a-nasty-interaction">Maximal models, boundaries and gradients: a nasty interaction</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"nlme"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'nlme'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:lme4':
+
+    lmList</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">21</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>Weight<span class="ot">=</span><span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>; Weight<span class="ot">=</span>Weight<span class="sc">+</span><span class="fu">runif</span>(<span class="dv">10</span>,<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="dv">3</span>) <span class="co">#First weight measurement</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>Weight <span class="ot">=</span> <span class="fu">c</span>(Weight, Weight)<span class="co"># + runif(10,min=-1e-5,max=1e-5))</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>Height <span class="ot">=</span> <span class="fl">0.8017481</span> <span class="sc">*</span> Weight <span class="sc">+</span> <span class="fl">2.33605</span> <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="dv">20</span>,<span class="at">mean=</span><span class="dv">0</span>,<span class="at">sd=</span><span class="dv">1</span>)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>DFsing<span class="ot">=</span><span class="fu">data.frame</span>(Height,Weight) <span class="co">#generate data frame</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>DFsing<span class="sc">$</span>ID<span class="ot">=</span><span class="fu">as.factor</span>(<span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>,<span class="dv">2</span>)) <span class="co">#add subject ID</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>DFsing<span class="sc">$</span>Number<span class="ot">=</span><span class="fu">as.factor</span>(<span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">10</span>),<span class="fu">rep</span>(<span class="dv">2</span>,<span class="dv">10</span>))) <span class="co">#difference</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>msingular <span class="ot">=</span> <span class="fu">lmer</span>(Height<span class="sc">~</span>Weight<span class="sc">+</span>(<span class="dv">1</span><span class="sc">|</span>ID),<span class="at">data=</span>DFsing,</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>                 <span class="at">REML=</span><span class="cn">FALSE</span>,</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>                 <span class="at">control=</span><span class="fu">lmerControl</span>(<span class="at">optimizer=</span><span class="st">"nloptwrap"</span>,</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">calc.derivs =</span> <span class="cn">FALSE</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>boundary (singular) fit: see help('isSingular')</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(msingular)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: Height ~ Weight + (1 | ID)
+   Data: DFsing
+Control: lmerControl(optimizer = "nloptwrap", calc.derivs = FALSE)
+
+     AIC      BIC   logLik deviance df.resid 
+    60.9     64.9    -26.5     52.9       16 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.2393 -0.8435  0.2213  0.6692  1.6312 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ ID       (Intercept) 0.0000   0.0000  
+ Residual             0.8251   0.9083  
+Number of obs: 20, groups:  ID, 10
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  2.53589    0.50572   5.014
+Weight       0.75121    0.06368  11.797
+
+Correlation of Fixed Effects:
+       (Intr)
+Weight -0.916
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>msinglme<span class="ot">=</span><span class="fu">lme</span>(Height<span class="sc">~</span>Weight,<span class="at">random=</span><span class="sc">~</span><span class="dv">1</span><span class="sc">|</span>ID,<span class="at">data=</span>DFsing, <span class="at">method=</span><span class="st">"ML"</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>ff <span class="ot">&lt;-</span> <span class="fu">as.function</span>(msingular)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>tvec <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">5</span>,<span class="at">length=</span><span class="dv">101</span>)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>Lvec <span class="ot">&lt;-</span> <span class="fu">sapply</span>(tvec,ff)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">bty=</span><span class="st">"l"</span>,<span class="at">las=</span><span class="dv">1</span>)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>sdsing <span class="ot">&lt;-</span> <span class="fu">getME</span>(msingular,<span class="st">"theta"</span>)</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>sdsinglme <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">getVarCov</span>(msinglme)[[<span class="dv">1</span>]])<span class="sc">/</span><span class="fu">sigma</span>(msinglme)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">lwd=</span><span class="dv">2</span>, <span class="at">cex=</span><span class="dv">2</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mar=</span><span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">1</span>,<span class="dv">2</span>))</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(tvec,Lvec,<span class="at">type=</span><span class="st">"l"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">"deviance"</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab=</span><span class="st">"scaled random effects standard deviation"</span>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(sdsinglme,<span class="fu">ff</span>(sdsing),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">4</span>)</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="fu">points</span>(sdsing,<span class="fu">ff</span>(sdsing),<span class="at">pch=</span><span class="dv">16</span>,<span class="at">col=</span><span class="dv">2</span>)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="fu">text</span>(<span class="dv">3</span>,<span class="dv">60</span>,<span class="at">label=</span><span class="fu">sprintf</span>(<span class="st">"nlme: %f</span><span class="sc">\n</span><span class="st">lme4: %f"</span>, sdsinglme,sdsing))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="01-convergence_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="repca" class="level2">
+<h2 class="anchored" data-anchor-id="repca">rePCA</h2>
+<ul>
+<li><code>rePCA()</code> performs PCA on the random-effects matrix.</li>
+<li>This is useful for determining the <em>effective dimensionality</em> of our RE – in other words, how many RE terms are supported by your data.</li>
+<li>For the <code>sleepstudy</code>, we could get 96% of the variance explained with one RE term!</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">rePCA</span>(m2))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$Subject
+Importance of components:
+                         [,1]    [,2]
+Standard deviation     0.9294 0.22260
+Proportion of Variance 0.9457 0.05425
+Cumulative Proportion  0.9457 1.00000</code></pre>
+</div>
+</div>
+<ul>
+<li>see Bates et al.&nbsp;(2015), “Parsimonious Mixed Models”.</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
