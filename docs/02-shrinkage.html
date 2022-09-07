@@ -212,27 +212,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<div class="cell" data-execution_count="1">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">Pkg</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">Pkg</span>.<span class="fu">activate</span>(<span class="st">"."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>  Activating project at `~/Work/leipzig-2022`</code></pre>
-</div>
-</div>
 <section id="what-does-omiting-the-correlation-parameter-do" class="level2">
 <h2 class="anchored" data-anchor-id="what-does-omiting-the-correlation-parameter-do">What does omiting the correlation parameter do?</h2>
 <p>Because the number of correlations grows quadratically with the number of random slopes, adding just one additional slope (whether main effect or interaction) can greatly increase the number of free parameters in the model. We can omit them from the model, using the <code>||</code> in lme4, splitting elements into separate <code>(x + ... | grp)</code> terms in lme4 or MixedModels.jl or using <code>zerocorr</code> in MixedModels.jl.</p>
 <p>In terms of philosophy, this is a bit like omitting higher order interactions from the fixed effects: there is change in the <em>bias-variance tradeoff</em>. However, practice suggests that the tradeoff is often worthwhile, although it makes shrinkage less efficient. John Kruschke has <a href="https://doingbayesiandataanalysis.blogspot.com/2019/07/shrinkage-in-hierarchical-models-random.html">a nice worked example on his blog.</a></p>
 <p>For our sleep study example, we we can see that there is very little impact because there is almost no correlation between the random intercept and random slope.</p>
 <div class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CairoMakie</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">MixedModels</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">MixedModelsMakie</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>sleepstudy <span class="op">=</span> MixedModels.<span class="fu">dataset</span>(<span class="op">:</span>sleepstudy)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># REML=false by default in Julia</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>m2 <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(reaction <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> days <span class="op">+</span> (<span class="fl">1</span> <span class="op">+</span> days <span class="op">|</span> subj)), sleepstudy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">CairoMakie</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">MixedModels</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">using</span> <span class="bu">MixedModelsMakie</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>sleepstudy <span class="op">=</span> MixedModels.<span class="fu">dataset</span>(<span class="op">:</span>sleepstudy)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># REML=false by default in Julia</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>m2 <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(reaction <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> days <span class="op">+</span> (<span class="fl">1</span> <span class="op">+</span> days <span class="op">|</span> subj)), sleepstudy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="48">
 <table class="table table-sm table-striped">
 <thead>
 <tr class="header">
@@ -275,14 +268,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <p>We can see this with a shrinkage plot, which show the by-group (here: by-subject) offsets from the grand mean for each random effect. The red dots correspond to the esimtates you would get from classical linear regression within subjects, while the blue dots correspond to the shrunken “estimates” (technically predictions) you get for each subject from the mixed model.</p>
 <div class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="49">
 <p><img src="02-shrinkage_files/figure-html/cell-4-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <div class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m2)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m2)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="50">
 <pre><code>
 Principal components based on correlation matrix
  (Intercept)  1.0    .
@@ -298,8 +291,8 @@ Component loadings
 </div>
 </div>
 <div class="cell" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>m2_zerocorr <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(reaction <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> days <span class="op">+</span> <span class="fu">zerocorr</span>(<span class="fl">1</span> <span class="op">+</span> days <span class="op">|</span> subj)), sleepstudy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>m2_zerocorr <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(reaction <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> days <span class="op">+</span> <span class="fu">zerocorr</span>(<span class="fl">1</span> <span class="op">+</span> days <span class="op">|</span> subj)), sleepstudy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="51">
 <table class="table table-sm table-striped">
 <thead>
 <tr class="header">
@@ -341,14 +334,14 @@ Component loadings
 </div>
 </div>
 <div class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m2_zerocorr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m2_zerocorr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="52">
 <p><img src="02-shrinkage_files/figure-html/cell-7-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <div class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m2)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m2)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="53">
 <pre><code>
 Principal components based on correlation matrix
  (Intercept)  1.0    .
@@ -365,22 +358,22 @@ Component loadings
 </div>
 <p>If we consider a more complex model, then the change can be much more dramatic:</p>
 <div class="cell" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>kb07 <span class="op">=</span> MixedModels.<span class="fu">dataset</span>(<span class="op">:</span>kb07)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>contrasts <span class="op">=</span> <span class="fu">Dict</span>(<span class="op">:</span>subj <span class="op">=&gt;</span> <span class="fu">Grouping</span>(),</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>item <span class="op">=&gt;</span> <span class="fu">Grouping</span>(),</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>spkr <span class="op">=&gt;</span> <span class="fu">EffectsCoding</span>(),</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>prec <span class="op">=&gt;</span> <span class="fu">EffectsCoding</span>(),</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>load <span class="op">=&gt;</span> <span class="fu">EffectsCoding</span>() )</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>m_kb07 <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(rt_raw <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> spkr <span class="op">*</span> prec <span class="op">*</span> load <span class="op">+</span> (<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load<span class="op">|</span>subj) <span class="op">+</span> (<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load<span class="op">|</span>item)), kb07; contrasts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>kb07 <span class="op">=</span> MixedModels.<span class="fu">dataset</span>(<span class="op">:</span>kb07)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>contrasts <span class="op">=</span> <span class="fu">Dict</span>(<span class="op">:</span>subj <span class="op">=&gt;</span> <span class="fu">Grouping</span>(),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>item <span class="op">=&gt;</span> <span class="fu">Grouping</span>(),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>spkr <span class="op">=&gt;</span> <span class="fu">EffectsCoding</span>(),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>prec <span class="op">=&gt;</span> <span class="fu">EffectsCoding</span>(),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                 <span class="op">:</span>load <span class="op">=&gt;</span> <span class="fu">EffectsCoding</span>() )</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>m_kb07 <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(rt_raw <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> spkr <span class="op">*</span> prec <span class="op">*</span> load <span class="op">+</span> (<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load<span class="op">|</span>subj) <span class="op">+</span> (<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load<span class="op">|</span>item)), kb07; contrasts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>┌ Warning: ProgressMeter by default refresh meters with additional information in IJulia via `IJulia.clear_output`, which clears all outputs in the cell. 
 │  - To prevent this behaviour, do `ProgressMeter.ijulia_behavior(:append)`. 
 │  - To disable this warning message, do `ProgressMeter.ijulia_behavior(:clear)`.
 └ @ ProgressMeter /home/phillip/.julia/packages/ProgressMeter/sN2xr/src/ProgressMeter.jl:618
-Minimizing 601   Time: 0:00:00 ( 0.38 ms/it)
+Minimizing 601   Time: 0:00:00 ( 0.62 ms/it)
   objective:  29652.62866326455</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell-output cell-output-display" data-execution_count="54">
 <table class="table table-sm table-striped">
 <colgroup>
 <col style="width: 44%">
@@ -489,8 +482,8 @@ Minimizing 601   Time: 0:00:00 ( 0.38 ms/it)
 </div>
 </div>
 <div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m_kb07)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m_kb07)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="55">
 <pre><code>
 Principal components based on correlation matrix
  (Intercept)      1.0    .     .     .
@@ -511,14 +504,14 @@ Component loadings
 </div>
 <p>The effective dimensionality can be seen in the way that the random effects collapse into lines (i.e.. a 1-D object) within the majority of the panels (each representing a 2-D plane).</p>
 <div class="cell" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m_kb07, <span class="op">:</span>subj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m_kb07, <span class="op">:</span>subj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="56">
 <p><img src="02-shrinkage_files/figure-html/cell-11-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
 <div class="cell" data-execution_count="11">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>m_kb07zc <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(rt_raw <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> spkr <span class="op">*</span> prec <span class="op">*</span> load <span class="op">+</span> <span class="fu">zerocorr</span>(<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load <span class="op">|</span> subj) <span class="op">+</span> <span class="fu">zerocorr</span>(<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load <span class="op">|</span> item)), kb07; contrasts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>m_kb07zc <span class="op">=</span> <span class="fu">fit</span>(MixedModel, <span class="pp">@formula</span>(rt_raw <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> spkr <span class="op">*</span> prec <span class="op">*</span> load <span class="op">+</span> <span class="fu">zerocorr</span>(<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load <span class="op">|</span> subj) <span class="op">+</span> <span class="fu">zerocorr</span>(<span class="fl">1</span> <span class="op">+</span> spkr <span class="op">+</span> prec <span class="op">+</span> load <span class="op">|</span> item)), kb07; contrasts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="57">
 <table class="table table-sm table-striped">
 <colgroup>
 <col style="width: 44%">
@@ -627,8 +620,8 @@ Component loadings
 </div>
 </div>
 <div class="cell" data-execution_count="12">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m_kb07zc)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>MixedModels.<span class="fu">PCA</span>(m_kb07zc)[<span class="op">:</span>subj]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="58">
 <pre><code>
 Principal components based on correlation matrix
  (Intercept)     1.0  .    .    .
@@ -649,8 +642,8 @@ Component loadings
 </div>
 <p>When we force the correlations to be zero, we can no longer get diagonal lines – we we can only get horizontal or vertical lines within each panel. Diagonal lines correspond to non zeor correlations between two variance components.</p>
 <div class="cell" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m_kb07zc, <span class="op">:</span>subj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode julia code-with-copy"><code class="sourceCode julia"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">shrinkageplot</span>(m_kb07zc, <span class="op">:</span>subj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="59">
 <p><img src="02-shrinkage_files/figure-html/cell-14-output-1.svg" class="img-fluid"></p>
 </div>
 </div>
