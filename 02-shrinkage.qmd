@@ -3,13 +3,7 @@ title: "Shrinkage and the correlation parameter"
 jupyter: julia-1.8
 ---
 
-```{julia}
-#| include: false
-using Pkg
-Pkg.activate(".");
-```
-
-## What does omiting the correlation parameter do?
+## What does omitting the correlation parameter do?
 
 Because the number of correlations grows quadratically with the number of random slopes, adding just one additional slope (whether main effect or interaction) can greatly increase the number of free parameters in the model.
 We can omit them from the model, using the `||` in lme4, splitting elements into separate `(x + ... | grp)` terms in lme4 or MixedModels.jl or using `zerocorr` in MixedModels.jl.
