@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.1.165">
+<meta name="generator" content="quarto-1.1.189">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -194,7 +194,7 @@ ul.task-list li input[type="checkbox"] {
 <li>Partly from reviewer perspective: Violations of distribution assumptions, how vulnerable are LMMs in practice?
 <ul>
 <li>It depends…</li>
-<li>See <a href="file:///home/phillip/Downloads/optional-stopping-in-the-garden.pdf">here</a> for some slides</li>
+<li>See <a href="https://hg.sr.ht/~palday/asa-adelaide2016/raw/optional-stopping-in-the-garden.pdf">here</a> for some slides</li>
 <li>Bottom line: standard errors are the first thing to go when the residual error isn’t anywhere near normal</li>
 <li>NB: the majority of assumptions are on the <em>conditional distribution</em>, i.e.&nbsp;the distribution of the residuals, not the <em>marginal distribution</em> (the “raw” distribution of the data)</li>
 </ul></li>
@@ -202,7 +202,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li>generally speaking, multicollinearity inflates your standard errors and so consumes statistical power</li>
 <li>There are even arguments <a href="https://doi.org/10.1016/j.ssresearch.2012.05.014">against using tricks like residualization</a> to compensate for multicollinearity and instead for collecting more data to compensate</li>
-<li>the <a href="VIF">variance inflation factor</a> attempts to quantify the amount that the standard errors are inflated</li>
+<li>the <a href="https://en.wikipedia.org/wiki/Variance_inflation_factor">variance inflation factor (VIF)</a> attempts to quantify the amount that the standard errors are inflated</li>
 <li>predictions based on your model aren’t really impacted by multicollinearity because any perturbation of one coefficient pulls its interwined coefficient along</li>
 <li>near perfect multicollinearity can nonetheless cause <a href="https://juliastats.org/MixedModels.jl/stable/rankdeficiency/#Fixed-effects">numerical problems</a></li>
 </ul></li>
