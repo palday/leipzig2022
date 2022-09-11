@@ -34,13 +34,13 @@ Note that many of these questions are near duplicates, but I figure it's good to
 ## Assumptions and violations thereof
 - Partly from reviewer perspective: Violations of distribution assumptions, how vulnerable are LMMs in practice?
     - It depends...
-    - See [here](file:///home/phillip/Downloads/optional-stopping-in-the-garden.pdf) for some slides
+    - See [here](https://hg.sr.ht/~palday/asa-adelaide2016/raw/optional-stopping-in-the-garden.pdf) for some slides
     - Bottom line: standard errors are the first thing to go when the residual error isn't anywhere near normal
     - NB: the majority of assumptions are on the *conditional distribution*, i.e. the distribution of the residuals, not the *marginal distribution* (the "raw" distribution of the data)
 - Multicollinearity: How bad can it be?
     - generally speaking, multicollinearity inflates your standard errors and so consumes statistical power
     - There are even arguments [against using tricks like residualization](https://doi.org/10.1016/j.ssresearch.2012.05.014) to compensate for multicollinearity and instead for collecting more data to compensate
-    - the [variance inflation factor](VIF) attempts to quantify the amount that the standard errors are inflated
+    - the [variance inflation factor (VIF)](https://en.wikipedia.org/wiki/Variance_inflation_factor) attempts to quantify the amount that the standard errors are inflated
     - predictions based on your model aren't really impacted by multicollinearity because any perturbation of one coefficient pulls its interwined coefficient along
     - near perfect multicollinearity can nonetheless cause [numerical problems](https://juliastats.org/MixedModels.jl/stable/rankdeficiency/#Fixed-effects)
 - How to analyze RTs with (G)LMMs (skewed distributions)?
